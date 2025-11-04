@@ -22,7 +22,7 @@ Example usage:
             |> MultiSeqDict.insert "A" 2
 
     MultiSeqDict.get "A" oneToMany
-    --> Set.fromList [1, 2]
+    --> SeqSet.fromList [1, 2]
 
 
 # Dictionaries
@@ -64,37 +64,37 @@ Example usage:
 import SeqDict exposing (SeqDict)
 
 import List.Extra
-import Set exposing (Set)
+import SeqSet exposing (SeqSet)
 
 
 {-| The underlying data structure. Think about it as
 
-     type alias MultiSeqDict comparable1 comparable2 =
-         Dict comparable1 (Set comparable2) -- just a normal Dict!
+     type alias MultiSeqDict k v =
+         Dict k (SeqSet v) -- just a normal Dict!
 
 -}
-type MultiSeqDict comparable1 comparable2
-    = MultiSeqDict (SeqDict comparable1 (Set comparable2))
+type MultiSeqDict k v
+    = MultiSeqDict (SeqDict k (SeqSet v))
 
 
 {-| Create an empty dictionary.
 -}
-empty : MultiSeqDict comparable1 comparable2
+empty : MultiSeqDict k v
 empty =
     MultiSeqDict SeqDict.empty
 
 
 {-| Create a dictionary with one key-value pair.
 -}
-singleton : comparable1 -> comparable2 -> MultiSeqDict comparable1 comparable2
+singleton : k -> v -> MultiSeqDict k v
 singleton from to =
-    MultiSeqDict (SeqDict.singleton from (Set.singleton to))
+    MultiSeqDict (SeqDict.singleton from (SeqSet.singleton to))
 
 
 {-| Insert a key-value pair into a dictionary. Replaces value when there is
 a collision.
 -}
-insert : comparable1 -> comparable2 -> MultiSeqDict comparable1 comparable2 -> MultiSeqDict comparable1 comparable2
+insert : k -> v -> MultiSeqDict k v -> MultiSeqDict k v
 insert from to (MultiSeqDict d) =
     MultiSeqDict <|
         SeqDict.update
@@ -102,27 +102,27 @@ insert from to (MultiSeqDict d) =
             (\maybeSet ->
                 case maybeSet of
                     Nothing ->
-                        Just (Set.singleton to)
+                        Just (SeqSet.singleton to)
 
                     Just set ->
-                        Just (Set.insert to set)
+                        Just (SeqSet.insert to set)
             )
             d
 
 
 {-| Update the value of a dictionary for a specific key with a given function.
 -}
-update : comparable1 -> (Set comparable2 -> Set comparable2) -> MultiSeqDict comparable1 comparable2 -> MultiSeqDict comparable1 comparable2
+update : k -> (SeqSet v -> SeqSet v) -> MultiSeqDict k v -> MultiSeqDict k v
 update from fn (MultiSeqDict d) =
     MultiSeqDict <| SeqDict.update from (Maybe.andThen (normalizeSet << fn)) d
 
 
-{-| In our model, (Just Set.empty) has the same meaning as Nothing.
+{-| In our model, (Just SeqSet.empty) has the same meaning as Nothing.
 Make it be Nothing!
 -}
-normalizeSet : Set comparable1 -> Maybe (Set comparable1)
+normalizeSet : SeqSet k -> Maybe (SeqSet k)
 normalizeSet set =
-    if Set.isEmpty set then
+    if SeqSet.isEmpty set then
         Nothing
 
     else
@@ -132,7 +132,7 @@ normalizeSet set =
 {-| Remove all key-value pairs for the given key from a dictionary. If the key is
 not found, no changes are made.
 -}
-removeAll : comparable1 -> MultiSeqDict comparable1 comparable2 -> MultiSeqDict comparable1 comparable2
+removeAll : k -> MultiSeqDict k v -> MultiSeqDict k v
 removeAll from (MultiSeqDict d) =
     MultiSeqDict (SeqDict.remove from d)
 
@@ -140,10 +140,10 @@ removeAll from (MultiSeqDict d) =
 {-| Remove a single key-value pair from a dictionary. If the key is not found,
 no changes are made.
 -}
-remove : comparable1 -> comparable2 -> MultiSeqDict comparable1 comparable2 -> MultiSeqDict comparable1 comparable2
+remove : k -> v -> MultiSeqDict k v -> MultiSeqDict k v
 remove from to (MultiSeqDict d) =
     MultiSeqDict <|
-        SeqDict.update from (Maybe.andThen (Set.remove to >> normalizeSet)) d
+        SeqDict.update from (Maybe.andThen (SeqSet.remove to >> normalizeSet)) d
 
 
 {-| Determine if a dictionary is empty.
@@ -151,14 +151,14 @@ remove from to (MultiSeqDict d) =
     isEmpty empty == True
 
 -}
-isEmpty : MultiSeqDict comparable1 comparable2 -> Bool
+isEmpty : MultiSeqDict k v -> Bool
 isEmpty (MultiSeqDict d) =
     SeqDict.isEmpty d
 
 
 {-| Determine if a key is in a dictionary.
 -}
-member : comparable1 -> MultiSeqDict comparable1 comparable2 -> Bool
+member : k -> MultiSeqDict k v -> Bool
 member from (MultiSeqDict d) =
     SeqDict.member from d
 
@@ -169,22 +169,22 @@ dictionary.
 
     animals = fromList [ ("Tom", "cat"), ("Jerry", "mouse") ]
 
-    get "Tom"   animals == Set.singleton "cat"
-    get "Jerry" animals == Set.singleton "mouse"
-    get "Spike" animals == Set.empty
+    get "Tom"   animals == SeqSet.singleton "cat"
+    get "Jerry" animals == SeqSet.singleton "mouse"
+    get "Spike" animals == SeqSet.empty
 
 -}
-get : comparable1 -> MultiSeqDict comparable1 comparable2 -> Set comparable2
+get : k -> MultiSeqDict k v -> SeqSet v
 get from (MultiSeqDict d) =
     SeqDict.get from d
-        |> Maybe.withDefault Set.empty
+        |> Maybe.withDefault SeqSet.empty
 
 
 {-| Determine the number of key-value pairs in the dictionary.
 -}
-size : MultiSeqDict comparable1 comparable2 -> Int
+size : MultiSeqDict k v -> Int
 size (MultiSeqDict d) =
-    SeqDict.foldl (\_ set acc -> Set.size set + acc) 0 d
+    SeqDict.foldl (\_ set acc -> SeqSet.size set + acc) 0 d
 
 
 {-| Get all of the keys in a dictionary, sorted from lowest to highest.
@@ -192,7 +192,7 @@ size (MultiSeqDict d) =
     keys (fromList [ ( 0, "Alice" ), ( 1, "Bob" ) ]) == [ 0, 1 ]
 
 -}
-keys : MultiSeqDict comparable1 comparable2 -> List comparable1
+keys : MultiSeqDict k v -> List k
 keys (MultiSeqDict d) =
     SeqDict.keys d
 
@@ -202,22 +202,22 @@ keys (MultiSeqDict d) =
     values (fromList [ ( 0, "Alice" ), ( 1, "Bob" ) ]) == [ "Alice", "Bob" ]
 
 -}
-values : MultiSeqDict comparable1 comparable2 -> List comparable2
+values : MultiSeqDict k v -> List v
 values (MultiSeqDict d) =
     SeqDict.values d
-        |> List.concatMap Set.toList
+        |> List.concatMap SeqSet.toList
 
 
 {-| Convert a dictionary into an association list of key-value pairs, sorted by keys.
 -}
-toList : MultiSeqDict comparable1 comparable2 -> List ( comparable1, Set comparable2 )
+toList : MultiSeqDict k v -> List ( k, SeqSet v )
 toList (MultiSeqDict d) =
     SeqDict.toList d
 
 
 {-| Convert an association list into a dictionary.
 -}
-fromList : List ( comparable1, Set comparable2 ) -> MultiSeqDict comparable1 comparable2
+fromList : List ( k, SeqSet v ) -> MultiSeqDict k v
 fromList list =
     SeqDict.fromList list
         |> fromDict
@@ -234,19 +234,19 @@ fromList list =
 results in the same dict as
 
     fromList
-        [ ( "foo", Set.fromList [ 1, 3 ] )
-        , ( "bar", Set.fromList [ 2 ] )
+        [ ( "foo", SeqSet.fromList [ 1, 3 ] )
+        , ( "bar", SeqSet.fromList [ 2 ] )
         ]
 
 -}
-fromFlatList : List ( comparable1, comparable2 ) -> MultiSeqDict comparable1 comparable2
+fromFlatList : List ( k, v ) -> MultiSeqDict k v
 fromFlatList list =
     list
         |> List.Extra.gatherEqualsBy Tuple.first
         |> List.map
             (\( ( key, _ ) as x, xs ) ->
                 ( key
-                , Set.fromList <| List.map Tuple.second <| x :: xs
+                , SeqSet.fromList <| List.map Tuple.second <| x :: xs
                 )
             )
         |> SeqDict.fromList
@@ -255,21 +255,21 @@ fromFlatList list =
 
 {-| Apply a function to all values in a dictionary.
 -}
-map : (comparable1 -> comparable21 -> comparable22) -> MultiSeqDict comparable1 comparable21 -> MultiSeqDict comparable1 comparable22
+map : (k -> v1 -> v2) -> MultiSeqDict k v1 -> MultiSeqDict k v2
 map fn (MultiSeqDict d) =
-    MultiSeqDict <| SeqDict.map (\key set -> Set.map (fn key) set) d
+    MultiSeqDict <| SeqDict.map (\key set -> SeqSet.map (fn key) set) d
 
 
 {-| Convert MultiSeqDict into a SeqDict. (Throw away the reverse mapping.)
 -}
-toDict : MultiSeqDict comparable1 comparable2 -> SeqDict comparable1 (Set comparable2)
+toDict : MultiSeqDict k v -> SeqDict k (SeqSet v)
 toDict (MultiSeqDict d) =
     d
 
 
 {-| Convert Dict into a MultiSeqDict. (Compute the reverse mapping.)
 -}
-fromDict : SeqDict comparable1 (Set comparable2) -> MultiSeqDict comparable1 comparable2
+fromDict : SeqDict k (SeqSet v) -> MultiSeqDict k v
 fromDict dict =
     MultiSeqDict dict
 
@@ -286,7 +286,7 @@ fromDict dict =
     -- getAges users == [33,19,28]
 
 -}
-foldl : (comparable1 -> Set comparable2 -> acc -> acc) -> acc -> MultiSeqDict comparable1 comparable2 -> acc
+foldl : (k -> SeqSet v -> acc -> acc) -> acc -> MultiSeqDict k v -> acc
 foldl fn zero (MultiSeqDict d) =
     SeqDict.foldl fn zero d
 
@@ -303,20 +303,20 @@ foldl fn zero (MultiSeqDict d) =
     -- getAges users == [28,19,33]
 
 -}
-foldr : (comparable1 -> Set comparable2 -> acc -> acc) -> acc -> MultiSeqDict comparable1 comparable2 -> acc
+foldr : (k -> SeqSet v -> acc -> acc) -> acc -> MultiSeqDict k v -> acc
 foldr fn zero (MultiSeqDict d) =
     SeqDict.foldr fn zero d
 
 
 {-| Keep only the mappings that pass the given test.
 -}
-filter : (comparable1 -> comparable2 -> Bool) -> MultiSeqDict comparable1 comparable2 -> MultiSeqDict comparable1 comparable2
+filter : (k -> v -> Bool) -> MultiSeqDict k v -> MultiSeqDict k v
 filter fn (MultiSeqDict d) =
     SeqDict.toList d
         |> List.filterMap
             (\( key, values_ ) ->
                 values_
-                    |> Set.filter (fn key)
+                    |> SeqSet.filter (fn key)
                     |> normalizeSet
                     |> Maybe.map (Tuple.pair key)
             )
@@ -327,7 +327,7 @@ filter fn (MultiSeqDict d) =
 contains all key-value pairs which passed the test, and the second contains
 the pairs that did not.
 -}
-partition : (comparable1 -> Set comparable2 -> Bool) -> MultiSeqDict comparable1 comparable2 -> ( MultiSeqDict comparable1 comparable2, MultiSeqDict comparable1 comparable2 )
+partition : (k -> SeqSet v -> Bool) -> MultiSeqDict k v -> ( MultiSeqDict k v, MultiSeqDict k v )
 partition fn (MultiSeqDict d) =
     let
         ( true, false ) =
@@ -341,7 +341,7 @@ partition fn (MultiSeqDict d) =
 {-| Combine two dictionaries. If there is a collision, preference is given
 to the first dictionary.
 -}
-union : MultiSeqDict comparable1 comparable2 -> MultiSeqDict comparable1 comparable2 -> MultiSeqDict comparable1 comparable2
+union : MultiSeqDict k v -> MultiSeqDict k v -> MultiSeqDict k v
 union (MultiSeqDict left) (MultiSeqDict right) =
     MultiSeqDict <| SeqDict.union left right
 
@@ -349,14 +349,14 @@ union (MultiSeqDict left) (MultiSeqDict right) =
 {-| Keep a key-value pair when its key appears in the second dictionary.
 Preference is given to values in the first dictionary.
 -}
-intersect : MultiSeqDict comparable1 comparable2 -> MultiSeqDict comparable1 comparable2 -> MultiSeqDict comparable1 comparable2
+intersect : MultiSeqDict k v -> MultiSeqDict k v -> MultiSeqDict k v
 intersect (MultiSeqDict left) (MultiSeqDict right) =
     MultiSeqDict <| SeqDict.intersect left right
 
 
 {-| Keep a key-value pair when its key does not appear in the second dictionary.
 -}
-diff : MultiSeqDict comparable1 comparable2 -> MultiSeqDict comparable1 comparable2 -> MultiSeqDict comparable1 comparable2
+diff : MultiSeqDict k v -> MultiSeqDict k v -> MultiSeqDict k v
 diff (MultiSeqDict left) (MultiSeqDict right) =
     MultiSeqDict <| SeqDict.diff left right
 
@@ -373,11 +373,11 @@ you want.
 
 -}
 merge :
-    (comparable1 -> Set comparable21 -> acc -> acc)
-    -> (comparable1 -> Set comparable21 -> Set comparable22 -> acc -> acc)
-    -> (comparable1 -> Set comparable22 -> acc -> acc)
-    -> MultiSeqDict comparable1 comparable21
-    -> MultiSeqDict comparable1 comparable22
+    (k -> SeqSet v1 -> acc -> acc)
+    -> (k -> SeqSet v1 -> SeqSet v2 -> acc -> acc)
+    -> (k -> SeqSet v2 -> acc -> acc)
+    -> MultiSeqDict k v1
+    -> MultiSeqDict k v2
     -> acc
     -> acc
 merge fnLeft fnBoth fnRight (MultiSeqDict left) (MultiSeqDict right) zero =

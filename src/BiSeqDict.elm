@@ -22,7 +22,7 @@ Example usage:
             |> BiSeqDict.insert "D" 4
 
     BiSeqDict.getReverse 1 manyToOne
-    --> Set.fromList ["A", "C"]
+    --> SeqSet.fromList ["A", "C"]
 
 
 # Dictionaries
@@ -63,27 +63,27 @@ Example usage:
 
 import SeqDict exposing (SeqDict)
 
-import Set exposing (Set)
+import SeqSet exposing (SeqSet)
 
 
 {-| The underlying data structure. Think about it as
 
     type alias BiSeqDict a b =
         { forward : SeqDict a b -- just a normal Dict!
-        , reverse : SeqDict b (Set a) -- the reverse mappings!
+        , reverse : SeqDict b (SeqSet a) -- the reverse mappings!
         }
 
 -}
-type BiSeqDict comparable1 comparable2
+type BiSeqDict k v
     = BiSeqDict
-        { forward : SeqDict comparable1 comparable2
-        , reverse : SeqDict comparable2 (Set comparable1)
+        { forward : SeqDict k v
+        , reverse : SeqDict v (SeqSet k)
         }
 
 
 {-| Create an empty dictionary.
 -}
-empty : BiSeqDict comparable1 comparable2
+empty : BiSeqDict k v
 empty =
     BiSeqDict
         { forward = SeqDict.empty
@@ -93,18 +93,18 @@ empty =
 
 {-| Create a dictionary with one key-value pair.
 -}
-singleton : comparable1 -> comparable2 -> BiSeqDict comparable1 comparable2
+singleton : k -> v -> BiSeqDict k v
 singleton from to =
     BiSeqDict
         { forward = SeqDict.singleton from to
-        , reverse = SeqDict.singleton to (Set.singleton from)
+        , reverse = SeqDict.singleton to (SeqSet.singleton from)
         }
 
 
 {-| Insert a key-value pair into a dictionary. Replaces value when there is
 a collision.
 -}
-insert : comparable1 -> comparable2 -> BiSeqDict comparable1 comparable2 -> BiSeqDict comparable1 comparable2
+insert : k -> v -> BiSeqDict k v -> BiSeqDict k v
 insert from to (BiSeqDict d) =
     BiSeqDict
         { d
@@ -122,29 +122,29 @@ insert from to (BiSeqDict d) =
                             Just oldTo_ ->
                                 d.reverse
                                     |> SeqDict.update oldTo_
-                                        (Maybe.map (Set.remove from)
+                                        (Maybe.map (SeqSet.remove from)
                                             >> Maybe.andThen normalizeSet
                                         )
                 in
                 reverseWithoutOld
-                    |> SeqDict.update to (Maybe.withDefault Set.empty >> Set.insert from >> Just)
+                    |> SeqDict.update to (Maybe.withDefault SeqSet.empty >> SeqSet.insert from >> Just)
         }
 
 
 {-| Update the value of a dictionary for a specific key with a given function.
 -}
-update : comparable1 -> (Maybe comparable2 -> Maybe comparable2) -> BiSeqDict comparable1 comparable2 -> BiSeqDict comparable1 comparable2
+update : k -> (Maybe v -> Maybe v) -> BiSeqDict k v -> BiSeqDict k v
 update from fn (BiSeqDict d) =
     SeqDict.update from fn d.forward
         |> fromDict
 
 
-{-| In our model, (Just Set.empty) has the same meaning as Nothing.
+{-| In our model, (Just SeqSet.empty) has the same meaning as Nothing.
 Make it be Nothing!
 -}
-normalizeSet : Set comparable -> Maybe (Set comparable)
+normalizeSet : SeqSet k -> Maybe (SeqSet k)
 normalizeSet set =
-    if Set.isEmpty set then
+    if SeqSet.isEmpty set then
         Nothing
 
     else
@@ -154,12 +154,12 @@ normalizeSet set =
 {-| Remove a key-value pair from a dictionary. If the key is not found,
 no changes are made.
 -}
-remove : comparable1 -> BiSeqDict comparable1 comparable2 -> BiSeqDict comparable1 comparable2
+remove : k -> BiSeqDict k v -> BiSeqDict k v
 remove from (BiSeqDict d) =
     BiSeqDict
         { d
             | forward = SeqDict.remove from d.forward
-            , reverse = SeqDict.filterMap (\_ set -> Set.remove from set |> normalizeSet) d.reverse
+            , reverse = SeqDict.filterMap (\_ set -> SeqSet.remove from set |> normalizeSet) d.reverse
         }
 
 
@@ -168,14 +168,14 @@ remove from (BiSeqDict d) =
     isEmpty empty == True
 
 -}
-isEmpty : BiSeqDict comparable1 comparable2 -> Bool
+isEmpty : BiSeqDict k v -> Bool
 isEmpty (BiSeqDict d) =
     SeqDict.isEmpty d.forward
 
 
 {-| Determine if a key is in a dictionary.
 -}
-member : comparable1 -> BiSeqDict comparable1 comparable2 -> Bool
+member : k -> BiSeqDict k v -> Bool
 member from (BiSeqDict d) =
     SeqDict.member from d.forward
 
@@ -191,7 +191,7 @@ dictionary.
     get "Spike" animals == Nothing
 
 -}
-get : comparable1 -> BiSeqDict comparable1 comparable2 -> Maybe comparable2
+get : k -> BiSeqDict k v -> Maybe v
 get from (BiSeqDict d) =
     SeqDict.get from d.forward
 
@@ -199,15 +199,15 @@ get from (BiSeqDict d) =
 {-| Get the keys associated with a value. If the value is not found,
 return an empty set.
 -}
-getReverse : comparable2 -> BiSeqDict comparable1 comparable2 -> Set comparable1
+getReverse : v -> BiSeqDict k v -> SeqSet k
 getReverse to (BiSeqDict d) =
     SeqDict.get to d.reverse
-        |> Maybe.withDefault Set.empty
+        |> Maybe.withDefault SeqSet.empty
 
 
 {-| Determine the number of key-value pairs in the dictionary.
 -}
-size : BiSeqDict comparable1 comparable2 -> Int
+size : BiSeqDict k v -> Int
 size (BiSeqDict d) =
     SeqDict.size d.forward
 
@@ -217,7 +217,7 @@ size (BiSeqDict d) =
     keys (fromList [ ( 0, "Alice" ), ( 1, "Bob" ) ]) == [ 0, 1 ]
 
 -}
-keys : BiSeqDict comparable1 comparable2 -> List comparable1
+keys : BiSeqDict k v -> List k
 keys (BiSeqDict d) =
     SeqDict.keys d.forward
 
@@ -227,42 +227,42 @@ keys (BiSeqDict d) =
     values (fromList [ ( 0, "Alice" ), ( 1, "Bob" ) ]) == [ "Alice", "Bob" ]
 
 -}
-values : BiSeqDict comparable1 comparable2 -> List comparable2
+values : BiSeqDict k v -> List v
 values (BiSeqDict d) =
     SeqDict.values d.forward
 
 
 {-| Get a list of unique values in the dictionary.
 -}
-uniqueValues : BiSeqDict comparable1 comparable2 -> List comparable2
+uniqueValues : BiSeqDict k v -> List v
 uniqueValues (BiSeqDict d) =
     SeqDict.keys d.reverse
 
 
 {-| Get a count of unique values in the dictionary.
 -}
-uniqueValuesCount : BiSeqDict comparable1 comparable2 -> Int
+uniqueValuesCount : BiSeqDict k v -> Int
 uniqueValuesCount (BiSeqDict d) =
     SeqDict.size d.reverse
 
 
 {-| Convert a dictionary into an association list of key-value pairs, sorted by keys.
 -}
-toList : BiSeqDict comparable1 comparable2 -> List ( comparable1, comparable2 )
+toList : BiSeqDict k v -> List ( k, v )
 toList (BiSeqDict d) =
     SeqDict.toList d.forward
 
 
 {-| Convert a dictionary into a reverse association list of value-keys pairs.
 -}
-toReverseList : BiSeqDict comparable1 comparable2 -> List ( comparable2, Set comparable1 )
+toReverseList : BiSeqDict k v -> List ( v, SeqSet k )
 toReverseList (BiSeqDict d) =
     SeqDict.toList d.reverse
 
 
 {-| Convert an association list into a dictionary.
 -}
-fromList : List ( comparable1, comparable2 ) -> BiSeqDict comparable1 comparable2
+fromList : List ( k, v ) -> BiSeqDict k v
 fromList list =
     SeqDict.fromList list
         |> fromDict
@@ -270,7 +270,7 @@ fromList list =
 
 {-| Apply a function to all values in a dictionary.
 -}
-map : (comparable1 -> comparable21 -> comparable22) -> BiSeqDict comparable1 comparable21 -> BiSeqDict comparable1 comparable22
+map : (k -> v1 -> v2) -> BiSeqDict k v1 -> BiSeqDict k v2
 map fn (BiSeqDict d) =
     -- TODO diff instead of throwing away and creating from scratch?
     SeqDict.map fn d.forward
@@ -279,14 +279,14 @@ map fn (BiSeqDict d) =
 
 {-| Convert BiSeqDict into a SeqDict. (Throw away the reverse mapping.)
 -}
-toDict : BiSeqDict comparable1 comparable2 -> SeqDict comparable1 comparable2
+toDict : BiSeqDict k v -> SeqDict k v
 toDict (BiSeqDict d) =
     d.forward
 
 
 {-| Convert Dict into a BiSeqDict. (Compute the reverse mapping.)
 -}
-fromDict : SeqDict comparable1 comparable2 -> BiSeqDict comparable1 comparable2
+fromDict : SeqDict k v -> BiSeqDict k v
 fromDict forward =
     BiSeqDict
         { forward = forward
@@ -299,10 +299,10 @@ fromDict forward =
                                 Just <|
                                     case maybeKeys of
                                         Nothing ->
-                                            Set.singleton key
+                                            SeqSet.singleton key
 
                                         Just keys_ ->
-                                            Set.insert key keys_
+                                            SeqSet.insert key keys_
                             )
                             acc
                     )
@@ -322,7 +322,7 @@ fromDict forward =
     -- getAges users == [33,19,28]
 
 -}
-foldl : (comparable1 -> comparable2 -> acc -> acc) -> acc -> BiSeqDict comparable1 comparable2 -> acc
+foldl : (k -> v -> acc -> acc) -> acc -> BiSeqDict k v -> acc
 foldl fn zero (BiSeqDict d) =
     SeqDict.foldl fn zero d.forward
 
@@ -339,14 +339,14 @@ foldl fn zero (BiSeqDict d) =
     -- getAges users == [28,19,33]
 
 -}
-foldr : (comparable1 -> comparable2 -> acc -> acc) -> acc -> BiSeqDict comparable1 comparable2 -> acc
+foldr : (k -> v -> acc -> acc) -> acc -> BiSeqDict k v -> acc
 foldr fn zero (BiSeqDict d) =
     SeqDict.foldr fn zero d.forward
 
 
 {-| Keep only the key-value pairs that pass the given test.
 -}
-filter : (comparable1 -> comparable2 -> Bool) -> BiSeqDict comparable1 comparable2 -> BiSeqDict comparable1 comparable2
+filter : (k -> v -> Bool) -> BiSeqDict k v -> BiSeqDict k v
 filter fn (BiSeqDict d) =
     -- TODO diff instead of throwing away and creating from scratch?
     SeqDict.filter fn d.forward
@@ -357,7 +357,7 @@ filter fn (BiSeqDict d) =
 contains all key-value pairs which passed the test, and the second contains
 the pairs that did not.
 -}
-partition : (comparable1 -> comparable2 -> Bool) -> BiSeqDict comparable1 comparable2 -> ( BiSeqDict comparable1 comparable2, BiSeqDict comparable1 comparable2 )
+partition : (k -> v -> Bool) -> BiSeqDict k v -> ( BiSeqDict k v, BiSeqDict k v )
 partition fn (BiSeqDict d) =
     -- TODO diff instead of throwing away and creating from scratch?
     let
@@ -372,7 +372,7 @@ partition fn (BiSeqDict d) =
 {-| Combine two dictionaries. If there is a collision, preference is given
 to the first dictionary.
 -}
-union : BiSeqDict comparable1 comparable2 -> BiSeqDict comparable1 comparable2 -> BiSeqDict comparable1 comparable2
+union : BiSeqDict k v -> BiSeqDict k v -> BiSeqDict k v
 union (BiSeqDict left) (BiSeqDict right) =
     -- TODO diff instead of throwing away and creating from scratch?
     SeqDict.union left.forward right.forward
@@ -382,7 +382,7 @@ union (BiSeqDict left) (BiSeqDict right) =
 {-| Keep a key-value pair when its key appears in the second dictionary.
 Preference is given to values in the first dictionary.
 -}
-intersect : BiSeqDict comparable1 comparable2 -> BiSeqDict comparable1 comparable2 -> BiSeqDict comparable1 comparable2
+intersect : BiSeqDict k v -> BiSeqDict k v -> BiSeqDict k v
 intersect (BiSeqDict left) (BiSeqDict right) =
     -- TODO diff instead of throwing away and creating from scratch?
     SeqDict.intersect left.forward right.forward
@@ -391,7 +391,7 @@ intersect (BiSeqDict left) (BiSeqDict right) =
 
 {-| Keep a key-value pair when its key does not appear in the second dictionary.
 -}
-diff : BiSeqDict comparable1 comparable2 -> BiSeqDict comparable1 comparable2 -> BiSeqDict comparable1 comparable2
+diff : BiSeqDict k v -> BiSeqDict k v -> BiSeqDict k v
 diff (BiSeqDict left) (BiSeqDict right) =
     -- TODO diff instead of throwing away and creating from scratch?
     SeqDict.diff left.forward right.forward
@@ -410,11 +410,11 @@ you want.
 
 -}
 merge :
-    (comparable1 -> comparable21 -> acc -> acc)
-    -> (comparable1 -> comparable21 -> comparable22 -> acc -> acc)
-    -> (comparable1 -> comparable22 -> acc -> acc)
-    -> BiSeqDict comparable1 comparable21
-    -> BiSeqDict comparable1 comparable22
+    (k -> v1 -> acc -> acc)
+    -> (k -> v1 -> v2 -> acc -> acc)
+    -> (k -> v2 -> acc -> acc)
+    -> BiSeqDict k v1
+    -> BiSeqDict k v2
     -> acc
     -> acc
 merge fnLeft fnBoth fnRight (BiSeqDict left) (BiSeqDict right) zero =
