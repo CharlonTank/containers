@@ -145,7 +145,7 @@ All three types:
 - ✅ Provide O(log n) performance for core operations
 - ✅ Automatically maintain consistency (removing a key updates all related mappings)
 
-**Note:** Wire3 codec support has been added (`encodeBiSeqDict`, `encodeMultiSeqDict`, `encodeMultiBiSeqDict`) but there appears to be a Lamdera compiler issue with automatic codec wrapper generation for these new types. The functions are implemented correctly (following the SeqDict/SeqSet pattern), but the compiler-generated `w3_encode_*`/`w3_decode_*` wrappers have incorrect signatures. This issue needs to be addressed at the compiler level before these types can be used in Lamdera BackendModel.
+**Wire3 Support:** Full Lamdera Wire3 codec support is included for all three types (`encodeBiSeqDict`, `encodeMultiSeqDict`, `encodeMultiBiSeqDict`), allowing them to be used directly in your Lamdera `BackendModel`, `FrontendModel`, and messages.
 
 
 ## Comparison to other Elm packages
