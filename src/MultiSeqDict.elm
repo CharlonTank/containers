@@ -61,9 +61,8 @@ Example usage:
 
 -}
 
+import Internal.ListHelpers exposing (gatherEqualsBy)
 import SeqDict exposing (SeqDict)
-
-import List.Extra
 import SeqSet exposing (SeqSet)
 
 
@@ -242,7 +241,7 @@ results in the same dict as
 fromFlatList : List ( k, v ) -> MultiSeqDict k v
 fromFlatList list =
     list
-        |> List.Extra.gatherEqualsBy Tuple.first
+        |> gatherEqualsBy Tuple.first
         |> List.map
             (\( ( key, _ ) as x, xs ) ->
                 ( key
