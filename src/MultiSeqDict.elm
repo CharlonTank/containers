@@ -6,6 +6,7 @@ module MultiSeqDict exposing
     , keys, values, toList, fromList, fromFlatList
     , map, foldl, foldr, filter, partition
     , union, intersect, diff, merge
+    , encodeMultiSeqDict, decodeMultiSeqDict
     )
 
 {-| A dictionary mapping unique keys to **multiple** values, allowing for
@@ -59,9 +60,16 @@ Example usage:
 
 @docs union, intersect, diff, merge
 
+
+# Internal
+
+@docs encodeMultiSeqDict, decodeMultiSeqDict
+
 -}
 
+import Bytes.Decode
 import Internal.ListHelpers exposing (gatherEqualsBy)
+import Lamdera.Wire3
 import SeqDict exposing (SeqDict)
 import SeqSet exposing (SeqSet)
 
@@ -381,3 +389,17 @@ merge :
     -> acc
 merge fnLeft fnBoth fnRight (MultiSeqDict left) (MultiSeqDict right) zero =
     SeqDict.merge fnLeft fnBoth fnRight left right zero
+
+
+{-| The Lamdera compiler relies on this function, it is not intended to be used directly. Vendor this function in your own codebase if you want to use it, as the encoding can change without notice.
+-}
+encodeMultiSeqDict : (key -> Lamdera.Wire3.Encoder) -> (value -> Lamdera.Wire3.Encoder) -> MultiSeqDict key value -> Lamdera.Wire3.Encoder
+encodeMultiSeqDict encKey encValue d =
+    Lamdera.Wire3.encodeList (Lamdera.Wire3.encodePair encKey (SeqSet.encodeSet encValue)) (toList d)
+
+
+{-| The Lamdera compiler relies on this function, it is not intended to be used directly. Vendor this function in your own codebase if you want to use it, as the encoding can change without notice.
+-}
+decodeMultiSeqDict : Lamdera.Wire3.Decoder k -> Lamdera.Wire3.Decoder value -> Lamdera.Wire3.Decoder (MultiSeqDict k value)
+decodeMultiSeqDict decKey decValue =
+    Lamdera.Wire3.decodeList (Lamdera.Wire3.decodePair decKey (SeqSet.decodeSet decValue)) |> Bytes.Decode.map fromList

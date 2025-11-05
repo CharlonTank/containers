@@ -6,6 +6,7 @@ module BiSeqDict exposing
     , keys, values, toList, fromList
     , map, foldl, foldr, filter, partition
     , union, intersect, diff, merge
+    , encodeBiSeqDict, decodeBiSeqDict
     )
 
 {-| A dictionary that **maintains a mapping from the values back to keys,**
@@ -59,10 +60,16 @@ Example usage:
 
 @docs union, intersect, diff, merge
 
+
+# Internal
+
+@docs encodeBiSeqDict, decodeBiSeqDict
+
 -}
 
+import Bytes.Decode
+import Lamdera.Wire3
 import SeqDict exposing (SeqDict)
-
 import SeqSet exposing (SeqSet)
 
 
@@ -419,3 +426,17 @@ merge :
     -> acc
 merge fnLeft fnBoth fnRight (BiSeqDict left) (BiSeqDict right) zero =
     SeqDict.merge fnLeft fnBoth fnRight left.forward right.forward zero
+
+
+{-| The Lamdera compiler relies on this function, it is not intended to be used directly. Vendor this function in your own codebase if you want to use it, as the encoding can change without notice.
+-}
+encodeBiSeqDict : (key -> Lamdera.Wire3.Encoder) -> (value -> Lamdera.Wire3.Encoder) -> BiSeqDict key value -> Lamdera.Wire3.Encoder
+encodeBiSeqDict encKey encValue d =
+    Lamdera.Wire3.encodeList (Lamdera.Wire3.encodePair encKey encValue) (toList d)
+
+
+{-| The Lamdera compiler relies on this function, it is not intended to be used directly. Vendor this function in your own codebase if you want to use it, as the encoding can change without notice.
+-}
+decodeBiSeqDict : Lamdera.Wire3.Decoder k -> Lamdera.Wire3.Decoder value -> Lamdera.Wire3.Decoder (BiSeqDict k value)
+decodeBiSeqDict decKey decValue =
+    Lamdera.Wire3.decodeList (Lamdera.Wire3.decodePair decKey decValue) |> Bytes.Decode.map fromList
