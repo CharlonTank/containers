@@ -51,7 +51,7 @@ BiSeqDict.get aliceId userWorkspaces
 --> Just workspace1
 
 -- Reverse lookup: Who are all members of workspace1?
-BiSeqDict.getReverse workspace1 userWorkspaces
+BiSeqDict.getKeys workspace1 userWorkspaces
 --> SeqSet.fromList [aliceId, bobId]
 ```
 
@@ -82,7 +82,7 @@ propertyUnits =
         |> MultiSeqDict.insert property2 unit201
 
 -- Get all units for property1
-MultiSeqDict.get property1 propertyUnits
+MultiSeqDict.getAll property1 propertyUnits
 --> SeqSet.fromList [unit101, unit102]
 
 -- Remove a specific unit
@@ -116,11 +116,11 @@ chatDocuments =
         |> MultiBiSeqDict.insert chat2 doc1  -- doc1 is shared!
 
 -- What documents are in chat1?
-MultiBiSeqDict.get chat1 chatDocuments
+MultiBiSeqDict.getAll chat1 chatDocuments
 --> SeqSet.fromList [doc1, doc2]
 
 -- Which chats contain doc1?
-MultiBiSeqDict.getReverse doc1 chatDocuments
+MultiBiSeqDict.getKeys doc1 chatDocuments
 --> SeqSet.fromList [chat1, chat2]
 
 -- Transfer doc2 from chat1 to chat3

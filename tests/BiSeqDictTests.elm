@@ -219,21 +219,21 @@ reverseTests =
                         BiSeqDict.singleton "Tom" "cat"
 
                     result =
-                        BiSeqDict.getReverse "cat" dict
+                        BiSeqDict.getKeys "cat" dict
                 in
                 Expect.equal (SeqSet.size result) 1
         , test "getReverse multiple keys" <|
             \() ->
                 let
                     result =
-                        BiSeqDict.getReverse "cat" animals
+                        BiSeqDict.getKeys "cat" animals
                 in
                 Expect.equal (SeqSet.size result) 2
         , test "getReverse not found" <|
             \() ->
                 let
                     result =
-                        BiSeqDict.getReverse "dog" animals
+                        BiSeqDict.getKeys "dog" animals
                 in
                 Expect.equal (SeqSet.size result) 0
         , test "getReverse after insert" <|
@@ -246,7 +246,7 @@ reverseTests =
                             |> BiSeqDict.insert "k3" "v"
 
                     result =
-                        BiSeqDict.getReverse "v" dict
+                        BiSeqDict.getKeys "v" dict
                 in
                 Expect.equal (SeqSet.size result) 3
         , test "getReverse after remove" <|
@@ -257,7 +257,7 @@ reverseTests =
                             |> BiSeqDict.remove "Tom"
 
                     result =
-                        BiSeqDict.getReverse "cat" dict
+                        BiSeqDict.getKeys "cat" dict
                 in
                 Expect.equal (SeqSet.size result) 1
         , test "reverse index consistency after replace" <|
@@ -268,10 +268,10 @@ reverseTests =
                             |> BiSeqDict.insert "k" "new"
 
                     oldResult =
-                        BiSeqDict.getReverse "old" dict
+                        BiSeqDict.getKeys "old" dict
 
                     newResult =
-                        BiSeqDict.getReverse "new" dict
+                        BiSeqDict.getKeys "new" dict
                 in
                 Expect.equal ( SeqSet.size oldResult, SeqSet.size newResult ) ( 0, 1 )
         ]
@@ -300,7 +300,7 @@ customTypeTests =
                             |> BiSeqDict.insert Baz "hello"
 
                     result =
-                        BiSeqDict.getReverse "hello" dict
+                        BiSeqDict.getKeys "hello" dict
                 in
                 Expect.equal (SeqSet.size result) 2
         , test "can use custom records as values" <|
@@ -316,7 +316,7 @@ customTypeTests =
                         { name = "Alice", value = 1 }
 
                     reverseKeys =
-                        BiSeqDict.getReverse record dict
+                        BiSeqDict.getKeys record dict
                 in
                 Expect.equal (SeqSet.size reverseKeys) 2
         ]
@@ -386,7 +386,7 @@ fuzzTests =
                         BiSeqDict.fromList pairs
 
                     checkConsistency ( k, v ) =
-                        BiSeqDict.getReverse v dict
+                        BiSeqDict.getKeys v dict
                             |> SeqSet.member k
                 in
                 BiSeqDict.toList dict

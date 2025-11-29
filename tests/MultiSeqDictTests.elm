@@ -63,7 +63,7 @@ buildTests =
                         MultiSeqDict.singleton "k" "v"
 
                     values =
-                        MultiSeqDict.get "k" dict
+                        MultiSeqDict.getAll "k" dict
                 in
                 Expect.equal (SeqSet.size values) 1
         , test "insert" <|
@@ -73,7 +73,7 @@ buildTests =
                         MultiSeqDict.insert "k" "v" MultiSeqDict.empty
 
                     values =
-                        MultiSeqDict.get "k" dict
+                        MultiSeqDict.getAll "k" dict
                 in
                 Expect.equal (SeqSet.size values) 1
         , test "insert multiple values same key" <|
@@ -86,7 +86,7 @@ buildTests =
                             |> MultiSeqDict.insert "k" "v3"
 
                     values =
-                        MultiSeqDict.get "k" dict
+                        MultiSeqDict.getAll "k" dict
                 in
                 Expect.equal (SeqSet.size values) 3
         , test "insert duplicate value" <|
@@ -98,7 +98,7 @@ buildTests =
                             |> MultiSeqDict.insert "k" "v"
 
                     values =
-                        MultiSeqDict.get "k" dict
+                        MultiSeqDict.getAll "k" dict
                 in
                 Expect.equal (SeqSet.size values) 1
         , test "update" <|
@@ -109,7 +109,7 @@ buildTests =
                             |> MultiSeqDict.update "k" (SeqSet.insert "v2")
 
                     values =
-                        MultiSeqDict.get "k" dict
+                        MultiSeqDict.getAll "k" dict
                 in
                 Expect.equal (SeqSet.size values) 2
         , test "update to empty removes key" <|
@@ -130,7 +130,7 @@ buildTests =
                             |> MultiSeqDict.remove "k" "v1"
 
                     values =
-                        MultiSeqDict.get "k" dict
+                        MultiSeqDict.getAll "k" dict
                 in
                 Expect.equal (SeqSet.size values) 1
         , test "remove last value removes key" <|
@@ -197,14 +197,14 @@ queryTests =
             \() ->
                 let
                     colors =
-                        MultiSeqDict.get "colors" properties
+                        MultiSeqDict.getAll "colors" properties
                 in
                 Expect.equal (SeqSet.size colors) 2
         , test "get not found returns empty" <|
             \() ->
                 let
                     shapes =
-                        MultiSeqDict.get "shapes" properties
+                        MultiSeqDict.getAll "shapes" properties
                 in
                 Expect.equal (SeqSet.isEmpty shapes) True
         , test "size of empty dictionary" <|
@@ -267,7 +267,7 @@ listsTests =
                             ]
 
                     values =
-                        MultiSeqDict.get "k" dict
+                        MultiSeqDict.getAll "k" dict
                 in
                 Expect.equal (SeqSet.size values) 2
         , test "fromFlatList excludes duplicates" <|
@@ -280,7 +280,7 @@ listsTests =
                             ]
 
                     values =
-                        MultiSeqDict.get "k" dict
+                        MultiSeqDict.getAll "k" dict
                 in
                 Expect.equal (SeqSet.size values) 1
         , test "toList/fromList roundtrip" <|
@@ -315,7 +315,7 @@ transformTests =
                         MultiSeqDict.map (\k v -> v * 2) dict
 
                     values =
-                        MultiSeqDict.get "a" mapped
+                        MultiSeqDict.getAll "a" mapped
                             |> SeqSet.toList
                             |> List.sort
                 in
@@ -402,7 +402,7 @@ combineTests =
                         MultiSeqDict.union d1 d2
 
                     values =
-                        MultiSeqDict.get "a" result
+                        MultiSeqDict.getAll "a" result
                 in
                 Expect.equal (SeqSet.size values) 1
         , test "intersect" <|
@@ -466,7 +466,7 @@ customTypeTests =
                             |> MultiSeqDict.insert Bar 3
 
                     fooValues =
-                        MultiSeqDict.get Foo dict
+                        MultiSeqDict.getAll Foo dict
                 in
                 Expect.equal (SeqSet.size fooValues) 2
         , test "multiple custom type keys" <|
@@ -489,7 +489,7 @@ customTypeTests =
                             |> MultiSeqDict.insert "bob" { name = "Bob", value = 1 }
 
                     aliceValues =
-                        MultiSeqDict.get "alice" dict
+                        MultiSeqDict.getAll "alice" dict
                 in
                 Expect.equal (SeqSet.size aliceValues) 2
         ]
@@ -505,7 +505,7 @@ fuzzTests =
                         MultiSeqDict.fromFlatList pairs
 
                     result =
-                        MultiSeqDict.get num dict
+                        MultiSeqDict.getAll num dict
 
                     expected =
                         pairs
@@ -538,7 +538,7 @@ fuzzTests =
                             |> MultiSeqDict.insert num num
 
                     values =
-                        MultiSeqDict.get num dict
+                        MultiSeqDict.getAll num dict
                 in
                 Expect.equal (SeqSet.member num values) True
         , fuzz2 fuzzPairs int "remove works" <|
@@ -549,7 +549,7 @@ fuzzTests =
                             |> MultiSeqDict.remove num num
 
                     values =
-                        MultiSeqDict.get num dict
+                        MultiSeqDict.getAll num dict
                 in
                 Expect.equal (SeqSet.member num values) False
         , fuzz2 fuzzPairs int "removeAll works" <|

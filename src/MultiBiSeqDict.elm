@@ -1,8 +1,8 @@
 module MultiBiSeqDict exposing
     ( MultiBiSeqDict
-    , toDict, fromDict, getReverse, uniqueValues, uniqueValuesCount, toReverseList
-    , empty, singleton, insert, update, remove, removeAll
-    , isEmpty, member, get, size
+    , toDict, fromDict, getKeys, uniqueValues, uniqueValuesCount, toReverseList
+    , empty, singleton, insert, update, remove, removeAll, removeValues
+    , isEmpty, member, getAll, size
     , keys, values, toList, fromList
     , map, foldl, foldr, filter, partition
     , union, intersect, diff, merge
@@ -23,10 +23,10 @@ Example usage:
             |> MultiBiSeqDict.insert "C" 3
             |> MultiBiSeqDict.insert "A" 2
 
-    MultiBiSeqDict.get "A" manyToMany
+    MultiBiSeqDict.getAll "A" manyToMany
     --> SeqSet.fromList [1, 2]
 
-    MultiBiSeqDict.getReverse 2 manyToMany
+    MultiBiSeqDict.getKeys 2 manyToMany
     --> SeqSet.fromList ["A", "B"]
 
 
@@ -37,17 +37,17 @@ Example usage:
 
 # Differences from Dict
 
-@docs toDict, fromDict, getReverse, uniqueValues, uniqueValuesCount, toReverseList
+@docs toDict, fromDict, getKeys, uniqueValues, uniqueValuesCount, toReverseList
 
 
 # Build
 
-@docs empty, singleton, insert, update, remove, removeAll
+@docs empty, singleton, insert, update, remove, removeAll, removeValues
 
 
 # Query
 
-@docs isEmpty, member, get, size
+@docs isEmpty, member, getAll, size
 
 
 # Lists
@@ -172,6 +172,14 @@ remove from to (MultiBiSeqDict d) =
         |> fromDict
 
 
+{-| Remove all occurrences of a value from all keys in the dictionary.
+-}
+removeValues : v -> MultiBiSeqDict k v -> MultiBiSeqDict k v
+removeValues value (MultiBiSeqDict d) =
+    SeqDict.filterMap (\_ set -> SeqSet.remove value set |> normalizeSet) d.forward
+        |> fromDict
+
+
 {-| Determine if a dictionary is empty.
 
     isEmpty empty == True
@@ -189,28 +197,27 @@ member from (MultiBiSeqDict d) =
     SeqDict.member from d.forward
 
 
-{-| Get the value associated with a key. If the key is not found, return
-`Nothing`. This is useful when you are not sure if a key will be in the
-dictionary.
+{-| Get all values associated with a key. If the key is not found, return
+an empty set.
 
     animals = fromList [ ("Tom", Cat), ("Jerry", Mouse) ]
 
-    get "Tom"   animals == Just Cat
-    get "Jerry" animals == Just Mouse
-    get "Spike" animals == Nothing
+    getAll "Tom"   animals == SeqSet.singleton Cat
+    getAll "Jerry" animals == SeqSet.singleton Mouse
+    getAll "Spike" animals == SeqSet.empty
 
 -}
-get : k -> MultiBiSeqDict k v -> SeqSet v
-get from (MultiBiSeqDict d) =
+getAll : k -> MultiBiSeqDict k v -> SeqSet v
+getAll from (MultiBiSeqDict d) =
     SeqDict.get from d.forward
         |> Maybe.withDefault SeqSet.empty
 
 
-{-| Get the keys associated with a value. If the value is not found,
+{-| Get all keys associated with a value. If the value is not found,
 return an empty set.
 -}
-getReverse : v -> MultiBiSeqDict k v -> SeqSet k
-getReverse to (MultiBiSeqDict d) =
+getKeys : v -> MultiBiSeqDict k v -> SeqSet k
+getKeys to (MultiBiSeqDict d) =
     SeqDict.get to d.reverse
         |> Maybe.withDefault SeqSet.empty
 

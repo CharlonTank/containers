@@ -69,10 +69,10 @@ buildTests =
                         MultiBiSeqDict.singleton "k" "v"
 
                     values =
-                        MultiBiSeqDict.get "k" dict
+                        MultiBiSeqDict.getAll "k" dict
 
                     keys =
-                        MultiBiSeqDict.getReverse "v" dict
+                        MultiBiSeqDict.getKeys "v" dict
                 in
                 Expect.equal ( SeqSet.size values, SeqSet.size keys ) ( 1, 1 )
         , test "insert" <|
@@ -82,7 +82,7 @@ buildTests =
                         MultiBiSeqDict.insert "k" "v" MultiBiSeqDict.empty
 
                     values =
-                        MultiBiSeqDict.get "k" dict
+                        MultiBiSeqDict.getAll "k" dict
                 in
                 Expect.equal (SeqSet.size values) 1
         , test "insert multiple values same key" <|
@@ -95,7 +95,7 @@ buildTests =
                             |> MultiBiSeqDict.insert "k" "v3"
 
                     values =
-                        MultiBiSeqDict.get "k" dict
+                        MultiBiSeqDict.getAll "k" dict
                 in
                 Expect.equal (SeqSet.size values) 3
         , test "insert multiple keys same value" <|
@@ -108,7 +108,7 @@ buildTests =
                             |> MultiBiSeqDict.insert "k3" "v"
 
                     keys =
-                        MultiBiSeqDict.getReverse "v" dict
+                        MultiBiSeqDict.getKeys "v" dict
                 in
                 Expect.equal (SeqSet.size keys) 3
         , test "insert duplicate value" <|
@@ -120,7 +120,7 @@ buildTests =
                             |> MultiBiSeqDict.insert "k" "v"
 
                     values =
-                        MultiBiSeqDict.get "k" dict
+                        MultiBiSeqDict.getAll "k" dict
                 in
                 Expect.equal (SeqSet.size values) 1
         , test "update" <|
@@ -131,7 +131,7 @@ buildTests =
                             |> MultiBiSeqDict.update "k" (SeqSet.insert "v2")
 
                     values =
-                        MultiBiSeqDict.get "k" dict
+                        MultiBiSeqDict.getAll "k" dict
                 in
                 Expect.equal (SeqSet.size values) 2
         , test "update to empty removes key" <|
@@ -150,7 +150,7 @@ buildTests =
                             |> MultiBiSeqDict.update "k" (SeqSet.insert "v2")
 
                     keysForV2 =
-                        MultiBiSeqDict.getReverse "v2" dict
+                        MultiBiSeqDict.getKeys "v2" dict
                 in
                 Expect.equal (SeqSet.member "k" keysForV2) True
         , test "remove single value" <|
@@ -163,7 +163,7 @@ buildTests =
                             |> MultiBiSeqDict.remove "k" "v1"
 
                     values =
-                        MultiBiSeqDict.get "k" dict
+                        MultiBiSeqDict.getAll "k" dict
                 in
                 Expect.equal (SeqSet.size values) 1
         , test "remove updates reverse index" <|
@@ -176,7 +176,7 @@ buildTests =
                             |> MultiBiSeqDict.remove "k1" "v"
 
                     keys =
-                        MultiBiSeqDict.getReverse "v" dict
+                        MultiBiSeqDict.getKeys "v" dict
                 in
                 Expect.equal (SeqSet.size keys) 1
         , test "remove last value removes key" <|
@@ -219,10 +219,10 @@ buildTests =
                             |> MultiBiSeqDict.removeAll "k"
 
                     keysForV1 =
-                        MultiBiSeqDict.getReverse "v1" dict
+                        MultiBiSeqDict.getKeys "v1" dict
 
                     keysForV2 =
-                        MultiBiSeqDict.getReverse "v2" dict
+                        MultiBiSeqDict.getKeys "v2" dict
                 in
                 Expect.equal ( SeqSet.size keysForV1, SeqSet.size keysForV2 ) ( 1, 0 )
         , test "removeAll not found" <|
@@ -260,14 +260,14 @@ queryTests =
             \() ->
                 let
                     docs =
-                        MultiBiSeqDict.get "chat1" chatDocuments
+                        MultiBiSeqDict.getAll "chat1" chatDocuments
                 in
                 Expect.equal (SeqSet.size docs) 2
         , test "get not found returns empty" <|
             \() ->
                 let
                     docs =
-                        MultiBiSeqDict.get "chat99" chatDocuments
+                        MultiBiSeqDict.getAll "chat99" chatDocuments
                 in
                 Expect.equal (SeqSet.isEmpty docs) True
         , test "size of empty dictionary" <|
@@ -288,14 +288,14 @@ reverseTests =
             \() ->
                 let
                     chats =
-                        MultiBiSeqDict.getReverse "doc1" chatDocuments
+                        MultiBiSeqDict.getKeys "doc1" chatDocuments
                 in
                 Expect.equal (SeqSet.size chats) 2
         , test "getReverse not found returns empty" <|
             \() ->
                 let
                     chats =
-                        MultiBiSeqDict.getReverse "doc99" chatDocuments
+                        MultiBiSeqDict.getKeys "doc99" chatDocuments
                 in
                 Expect.equal (SeqSet.isEmpty chats) True
         , test "getReverse after insert" <|
@@ -308,7 +308,7 @@ reverseTests =
                             |> MultiBiSeqDict.insert "k3" "v"
 
                     keys =
-                        MultiBiSeqDict.getReverse "v" dict
+                        MultiBiSeqDict.getKeys "v" dict
                 in
                 Expect.equal (SeqSet.size keys) 3
         , test "getReverse after remove" <|
@@ -321,7 +321,7 @@ reverseTests =
                             |> MultiBiSeqDict.remove "k1" "v"
 
                     keys =
-                        MultiBiSeqDict.getReverse "v" dict
+                        MultiBiSeqDict.getKeys "v" dict
                 in
                 Expect.equal (SeqSet.size keys) 1
         , test "reverse index consistency after replace" <|
@@ -332,10 +332,10 @@ reverseTests =
                             |> MultiBiSeqDict.update "k" (\_ -> SeqSet.singleton "new")
 
                     oldKeys =
-                        MultiBiSeqDict.getReverse "old" dict
+                        MultiBiSeqDict.getKeys "old" dict
 
                     newKeys =
-                        MultiBiSeqDict.getReverse "new" dict
+                        MultiBiSeqDict.getKeys "new" dict
                 in
                 Expect.equal ( SeqSet.size oldKeys, SeqSet.size newKeys ) ( 0, 1 )
         , test "reverse consistency with multiple updates" <|
@@ -349,10 +349,10 @@ reverseTests =
                             |> MultiBiSeqDict.remove "k1" "v1"
 
                     keysForV1 =
-                        MultiBiSeqDict.getReverse "v1" dict
+                        MultiBiSeqDict.getKeys "v1" dict
 
                     keysForV2 =
-                        MultiBiSeqDict.getReverse "v2" dict
+                        MultiBiSeqDict.getKeys "v2" dict
                 in
                 Expect.equal ( SeqSet.size keysForV1, SeqSet.size keysForV2 ) ( 1, 1 )
         , test "uniqueValues returns all unique values" <|
@@ -422,7 +422,7 @@ listsTests =
                             ]
 
                     keysFor3 =
-                        MultiBiSeqDict.getReverse 3 dict
+                        MultiBiSeqDict.getKeys 3 dict
                 in
                 Expect.equal (SeqSet.size keysFor3) 1
         , test "toList/fromList roundtrip" <|
@@ -452,7 +452,7 @@ transformTests =
                         MultiBiSeqDict.map (\k v -> v * 2) dict
 
                     values =
-                        MultiBiSeqDict.get "a" mapped
+                        MultiBiSeqDict.getAll "a" mapped
                             |> SeqSet.toList
                             |> List.sort
                 in
@@ -469,7 +469,7 @@ transformTests =
                         MultiBiSeqDict.map (\k v -> v * 10) dict
 
                     keysFor10 =
-                        MultiBiSeqDict.getReverse 10 mapped
+                        MultiBiSeqDict.getKeys 10 mapped
                 in
                 Expect.equal (SeqSet.size keysFor10) 2
         , test "foldl" <|
@@ -512,7 +512,7 @@ transformTests =
                         MultiBiSeqDict.filter (\k v -> v > 1) dict
 
                     keysFor1 =
-                        MultiBiSeqDict.getReverse 1 filtered
+                        MultiBiSeqDict.getKeys 1 filtered
                 in
                 Expect.equal (SeqSet.size keysFor1) 0
         , test "filter removes empty keys" <|
@@ -553,10 +553,10 @@ transformTests =
                         MultiBiSeqDict.partition (\k values -> SeqSet.size values == 2) dict
 
                     keysFor1InHasTwo =
-                        MultiBiSeqDict.getReverse 1 hasTwo
+                        MultiBiSeqDict.getKeys 1 hasTwo
 
                     keysFor1InNoTwo =
-                        MultiBiSeqDict.getReverse 1 noTwo
+                        MultiBiSeqDict.getKeys 1 noTwo
                 in
                 Expect.equal ( SeqSet.size keysFor1InHasTwo, SeqSet.size keysFor1InNoTwo ) ( 1, 1 )
         ]
@@ -595,7 +595,7 @@ combineTests =
                         MultiBiSeqDict.union d1 d2
 
                     values =
-                        MultiBiSeqDict.get "a" result
+                        MultiBiSeqDict.getAll "a" result
                 in
                 Expect.equal (SeqSet.size values) 1
         , test "union maintains reverse index" <|
@@ -613,10 +613,10 @@ combineTests =
                         MultiBiSeqDict.union d1 d2
 
                     keysFor1 =
-                        MultiBiSeqDict.getReverse 1 result
+                        MultiBiSeqDict.getKeys 1 result
 
                     keysFor2 =
-                        MultiBiSeqDict.getReverse 2 result
+                        MultiBiSeqDict.getKeys 2 result
                 in
                 Expect.equal ( SeqSet.size keysFor1, SeqSet.size keysFor2 ) ( 1, 1 )
         , test "intersect" <|
@@ -651,7 +651,7 @@ combineTests =
                         MultiBiSeqDict.intersect d1 d2
 
                     keysFor1 =
-                        MultiBiSeqDict.getReverse 1 result
+                        MultiBiSeqDict.getKeys 1 result
                 in
                 Expect.equal (SeqSet.size keysFor1) 1
         , test "diff" <|
@@ -686,10 +686,10 @@ combineTests =
                         MultiBiSeqDict.diff d1 d2
 
                     keysFor1 =
-                        MultiBiSeqDict.getReverse 1 result
+                        MultiBiSeqDict.getKeys 1 result
 
                     keysFor2 =
-                        MultiBiSeqDict.getReverse 2 result
+                        MultiBiSeqDict.getKeys 2 result
                 in
                 Expect.equal ( SeqSet.size keysFor1, SeqSet.size keysFor2 ) ( 0, 1 )
         , test "merge" <|
@@ -731,10 +731,10 @@ customTypeTests =
                             |> MultiBiSeqDict.insert Bar 2
 
                     fooValues =
-                        MultiBiSeqDict.get Foo dict
+                        MultiBiSeqDict.getAll Foo dict
 
                     keysFor2 =
-                        MultiBiSeqDict.getReverse 2 dict
+                        MultiBiSeqDict.getKeys 2 dict
                 in
                 Expect.equal ( SeqSet.size fooValues, SeqSet.size keysFor2 ) ( 2, 2 )
         , test "getReverse works with custom types" <|
@@ -747,7 +747,7 @@ customTypeTests =
                             |> MultiBiSeqDict.insert Baz "hello"
 
                     keys =
-                        MultiBiSeqDict.getReverse "hello" dict
+                        MultiBiSeqDict.getKeys "hello" dict
                 in
                 Expect.equal (SeqSet.size keys) 2
         , test "can use custom records as values" <|
@@ -763,7 +763,7 @@ customTypeTests =
                         { name = "Alice", value = 1 }
 
                     keys =
-                        MultiBiSeqDict.getReverse record dict
+                        MultiBiSeqDict.getKeys record dict
                 in
                 Expect.equal (SeqSet.size keys) 2
         ]
@@ -779,7 +779,7 @@ fuzzTests =
                         List.foldl (\( k, v ) acc -> MultiBiSeqDict.insert k v acc) MultiBiSeqDict.empty pairs
 
                     result =
-                        MultiBiSeqDict.get num dict
+                        MultiBiSeqDict.getAll num dict
 
                     expected =
                         pairs
@@ -795,7 +795,7 @@ fuzzTests =
                         List.foldl (\( k, v ) acc -> MultiBiSeqDict.insert k v acc) MultiBiSeqDict.empty pairs
 
                     result =
-                        MultiBiSeqDict.getReverse num dict
+                        MultiBiSeqDict.getKeys num dict
 
                     expected =
                         pairs
@@ -813,7 +813,7 @@ fuzzTests =
                     checkConsistency ( k, values ) =
                         SeqSet.foldl
                             (\v acc ->
-                                acc && SeqSet.member k (MultiBiSeqDict.getReverse v dict)
+                                acc && SeqSet.member k (MultiBiSeqDict.getKeys v dict)
                             )
                             True
                             values
@@ -829,7 +829,7 @@ fuzzTests =
                             |> MultiBiSeqDict.insert num num
 
                     values =
-                        MultiBiSeqDict.get num dict
+                        MultiBiSeqDict.getAll num dict
                 in
                 Expect.equal (SeqSet.member num values) True
         , fuzz2 fuzzPairs int "remove works" <|
@@ -840,7 +840,7 @@ fuzzTests =
                             |> MultiBiSeqDict.remove num num
 
                     values =
-                        MultiBiSeqDict.get num dict
+                        MultiBiSeqDict.getAll num dict
                 in
                 Expect.equal (SeqSet.member num values) False
         , fuzz2 fuzzPairs int "remove maintains reverse index" <|
@@ -851,7 +851,7 @@ fuzzTests =
                             |> MultiBiSeqDict.remove num num
 
                     keys =
-                        MultiBiSeqDict.getReverse num dict
+                        MultiBiSeqDict.getKeys num dict
                 in
                 Expect.equal (SeqSet.member num keys) False
         , fuzz2 fuzzPairs int "removeAll works" <|

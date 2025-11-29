@@ -1,8 +1,8 @@
 module MultiSeqDict exposing
     ( MultiSeqDict
     , toDict, fromDict
-    , empty, singleton, insert, update, remove, removeAll
-    , isEmpty, member, get, size
+    , empty, singleton, insert, update, remove, removeAll, removeValues
+    , isEmpty, member, getAll, size
     , keys, values, toList, fromList, fromFlatList
     , map, foldl, foldr, filter, partition
     , union, intersect, diff, merge
@@ -22,7 +22,7 @@ Example usage:
             |> MultiSeqDict.insert "C" 3
             |> MultiSeqDict.insert "A" 2
 
-    MultiSeqDict.get "A" oneToMany
+    MultiSeqDict.getAll "A" oneToMany
     --> SeqSet.fromList [1, 2]
 
 
@@ -38,12 +38,12 @@ Example usage:
 
 # Build
 
-@docs empty, singleton, insert, update, remove, removeAll
+@docs empty, singleton, insert, update, remove, removeAll, removeValues
 
 
 # Query
 
-@docs isEmpty, member, get, size
+@docs isEmpty, member, getAll, size
 
 
 # Lists
@@ -153,6 +153,14 @@ remove from to (MultiSeqDict d) =
         SeqDict.update from (Maybe.andThen (SeqSet.remove to >> normalizeSet)) d
 
 
+{-| Remove all occurrences of a value from all keys in the dictionary.
+-}
+removeValues : v -> MultiSeqDict k v -> MultiSeqDict k v
+removeValues value (MultiSeqDict d) =
+    MultiSeqDict <|
+        SeqDict.filterMap (\_ set -> SeqSet.remove value set |> normalizeSet) d
+
+
 {-| Determine if a dictionary is empty.
 
     isEmpty empty == True
@@ -170,19 +178,18 @@ member from (MultiSeqDict d) =
     SeqDict.member from d
 
 
-{-| Get the value associated with a key. If the key is not found, return
-`Nothing`. This is useful when you are not sure if a key will be in the
-dictionary.
+{-| Get all values associated with a key. If the key is not found, return
+an empty set.
 
     animals = fromList [ ("Tom", "cat"), ("Jerry", "mouse") ]
 
-    get "Tom"   animals == SeqSet.singleton "cat"
-    get "Jerry" animals == SeqSet.singleton "mouse"
-    get "Spike" animals == SeqSet.empty
+    getAll "Tom"   animals == SeqSet.singleton "cat"
+    getAll "Jerry" animals == SeqSet.singleton "mouse"
+    getAll "Spike" animals == SeqSet.empty
 
 -}
-get : k -> MultiSeqDict k v -> SeqSet v
-get from (MultiSeqDict d) =
+getAll : k -> MultiSeqDict k v -> SeqSet v
+getAll from (MultiSeqDict d) =
     SeqDict.get from d
         |> Maybe.withDefault SeqSet.empty
 

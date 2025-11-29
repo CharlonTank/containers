@@ -1,6 +1,6 @@
 module BiSeqDict exposing
     ( BiSeqDict
-    , toDict, fromDict, getReverse, uniqueValues, uniqueValuesCount, toReverseList
+    , toDict, fromDict, getKeys, uniqueValues, uniqueValuesCount, toReverseList
     , empty, singleton, insert, update, remove
     , isEmpty, member, get, size
     , keys, values, toList, fromList
@@ -22,7 +22,7 @@ Example usage:
             |> BiSeqDict.insert "C" 1
             |> BiSeqDict.insert "D" 4
 
-    BiSeqDict.getReverse 1 manyToOne
+    BiSeqDict.getKeys 1 manyToOne
     --> SeqSet.fromList ["A", "C"]
 
 
@@ -33,7 +33,7 @@ Example usage:
 
 # Differences from Dict
 
-@docs toDict, fromDict, getReverse, uniqueValues, uniqueValuesCount, toReverseList
+@docs toDict, fromDict, getKeys, uniqueValues, uniqueValuesCount, toReverseList
 
 
 # Build
@@ -203,11 +203,11 @@ get from (BiSeqDict d) =
     SeqDict.get from d.forward
 
 
-{-| Get the keys associated with a value. If the value is not found,
+{-| Get all keys associated with a value. If the value is not found,
 return an empty set.
 -}
-getReverse : v -> BiSeqDict k v -> SeqSet k
-getReverse to (BiSeqDict d) =
+getKeys : v -> BiSeqDict k v -> SeqSet k
+getKeys to (BiSeqDict d) =
     SeqDict.get to d.reverse
         |> Maybe.withDefault SeqSet.empty
 
