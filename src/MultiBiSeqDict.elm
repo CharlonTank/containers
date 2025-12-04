@@ -333,34 +333,14 @@ fromDict forward =
         }
 
 
-{-| Fold over the key-value pairs in a dictionary from lowest key to highest key.
-
-
-    getAges users =
-        SeqDict.foldl addAge [] users
-
-    addAge _ user ages =
-        user.age :: ages
-
-    -- getAges users == [33,19,28]
-
+{-| Fold over the key-value pairs in a dictionary in insertion order.
 -}
 foldl : (k -> SeqSet v -> acc -> acc) -> acc -> MultiBiSeqDict k v -> acc
 foldl fn zero (MultiBiSeqDict d) =
     SeqDict.foldl fn zero d.forward
 
 
-{-| Fold over the key-value pairs in a dictionary from highest key to lowest key.
-
-
-    getAges users =
-        SeqDict.foldr addAge [] users
-
-    addAge _ user ages =
-        user.age :: ages
-
-    -- getAges users == [28,19,33]
-
+{-| Fold over the key-value pairs in a dictionary in reverse insertion order.
 -}
 foldr : (k -> SeqSet v -> acc -> acc) -> acc -> MultiBiSeqDict k v -> acc
 foldr fn zero (MultiBiSeqDict d) =
